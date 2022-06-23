@@ -1,6 +1,7 @@
 from ntpath import join
 import os
 import bpy
+from bpy.props import EnumProperty
 
 bpr = bpy.props
 data_for_enum = []
@@ -14,43 +15,41 @@ bl_info = {
     "author": "Alisa Fedorova",
     "version": (1, 0),
     "blender": (2, 93, 0),
-    "location": "Object context menu",
+    "location": "Viev3D > N panel > Apples",
     "description": "Apples variations generator",
     "category": "Object",
 }
 
 
 def add_items_from_collection(self, context):
-    enum_items = []
-
     coll_name = "Apples"
-    with bpy.data.libraries.load(path + 'Apple.blend', False,
-                                 True) as (data_from, data_to):
-        data_to.collections = data_from.collections[0]
-        #data_to.meshes = data_from.meshes
-        '''
-        for i in range(len(coll_obj[0])):
-            enum_items.append(
-                (coll_obj.objects[i].name, coll_obj.objects[i].name, '', i))'''
+    enum_items = []
+    if coll_name not in bpy.data.collections:
+        with bpy.data.libraries.load(path + 'Apple.blend', False,
+                                     True) as (data_from, data_to):
+            data_to.collections = data_from.collections
+    col_obj = bpy.data.collections[coll_name].objects
+    #print(bpy.data.collections[coll_name].objects)
+    for e, obj in enumerate(col_obj):
 
-        #object_names = [obj for obj in data_from.collections[coll_name].objects]
+        enum_items.append((col_obj[e].name, col_obj[e].name, '', e))
+
     print(enum_items)
     return enum_items
 
 
-'''
-def add_items_from_collection_callback(self, context):
-    items = []
-    scene = context.scene
-    for item in scene.my_items.values():
-        items.append((item.some_str, item.some_str, ""))
-    return items
-'''
+class GenerateShader(bpy.types.Operator):
+
+    def execute(self, context):
+
+        return {'FINISHED'}
+
 
 PROPS = [
     ('apple_kind',
      bpy.props.EnumProperty(name='Kind of apple',
-                            items=[('a1', 'a1', '', 0), ('a2', 'a2', '', 1)])),
+                            items=add_items_from_collection,
+                            default=None)),
     ('location',
      bpy.props.EnumProperty(name='Location',
                             items=[('horizontally', 'Horizontally', '', 0),
@@ -80,6 +79,7 @@ class ObjGeneratorPanel(bpy.types.Panel):
     def draw(self, context):
         l = self.layout
         col = l.column()
+
         for (prop_name, _) in PROPS:
             row = col.row()
             row.prop(context.scene, prop_name)
@@ -87,8 +87,15 @@ class ObjGeneratorPanel(bpy.types.Panel):
         l.operator('opr.apples_generator_operator', text='Generate')  # OK
 
 
+class ObjGetter(bpy.types.PropertyGroup):
+
+    apple_kind: EnumProperty(name='Kind of apple',
+                             items=add_items_from_collection)
+
+
 CLASSES = [
     ObjGeneratorOperator,
+    ObjGetter,
     ObjGeneratorPanel,
 ]
 
@@ -97,9 +104,10 @@ def register():
 
     for (prop_name, prop_value) in PROPS:
         setattr(bpy.types.Scene, prop_name, prop_value)
-
     for klass in CLASSES:
         bpy.utils.register_class(klass)
+
+    #bpy.types.Scene.apple_props = bpy.props.PointerProperty(type=ObjGetter)
 
 
 def unregister():
@@ -109,6 +117,8 @@ def unregister():
 
     for klass in CLASSES:
         bpy.utils.unregister_class(klass)
+
+    #del bpy.types.Scene.apple_props
 
 
 if __name__ == '__main__':
