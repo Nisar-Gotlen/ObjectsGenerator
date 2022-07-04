@@ -2,6 +2,7 @@ from ntpath import join
 import os
 import bpy
 from bpy.props import EnumProperty
+#import AppleGen
 
 bpr = bpy.props
 data_for_enum = []
@@ -27,6 +28,7 @@ def add_items_from_collection(self, context):
     if coll_name not in bpy.data.collections:
         with bpy.data.libraries.load(path + 'Apple.blend', False,
                                      True) as (data_from, data_to):
+            print(data_from.collections)
             data_to.collections = data_from.collections
     col_obj = bpy.data.collections[coll_name].objects
     #print(bpy.data.collections[coll_name].objects)
@@ -34,7 +36,7 @@ def add_items_from_collection(self, context):
 
         enum_items.append((col_obj[e].name, col_obj[e].name, '', e))
 
-    print(enum_items)
+    #print(enum_items)
     return enum_items
 
 
@@ -66,6 +68,21 @@ class ObjGeneratorOperator(bpy.types.Operator):
     bl_idname = 'opr.apples_generator_operator'
     bl_label = 'Object Generator Operator'
     bl_description = 'Generate apples variations'
+
+    def execute(self, context):
+        print()
+        '''
+        AppleGen.deselect_scene()
+
+        ob_name = "Apple2"
+        obTuber = bpy.context.scene.objects[ob_name]
+        matrixSizeY = 3
+        matrixSizeX = 2
+        matrixShift = obTuber.dimensions.x + obTuber.dimensions.x / 5
+        '''
+        #gen_apple(obTuber, matrixSizeY, matrixSizeX, matrixShift)
+
+        return {'FINISHED'}
 
 
 class ObjGeneratorPanel(bpy.types.Panel):
